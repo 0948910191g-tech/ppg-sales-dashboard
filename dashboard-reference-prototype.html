@@ -314,8 +314,11 @@
         total.innerHTML = '<tr><td colspan="6" class="unavailable">แสดง “—” แทนการสร้างข้อมูล</td></tr>';
       }
     };
+    const LEGACY_ROUTES = new Set(['overview', 'sales-performance']);
     const renderRoute = () => {
-      const isSalesRoute = window.location.hash === '#sales-performance';
+      const route = window.location.hash.slice(1) || 'overview';
+      if (!LEGACY_ROUTES.has(route)) return;
+      const isSalesRoute = route === 'sales-performance';
       overviewView.hidden = isSalesRoute;
       salesPerformanceView.hidden = !isSalesRoute;
       const routeHeading = document.querySelector('.title-row h1');
@@ -333,9 +336,8 @@
         routeHeading.focus({ preventScroll: true });
       }
     };
-    document.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => {
-      const route = button.dataset.route;
-      const nextHash = route === 'sales-performance' ? '#sales-performance' : '#overview';
+    document.querySelectorAll('[data-route="overview"], [data-route="sales-performance"]').forEach(button => button.addEventListener('click', () => {
+      const nextHash = `#${button.dataset.route}`;
       if (window.location.hash === nextHash) renderRoute();
       else window.location.hash = nextHash;
     }));
