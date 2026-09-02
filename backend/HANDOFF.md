@@ -1,103 +1,122 @@
-# PPG Sales Dashboard Backend v1 — Handoff
+# PPG Sales Dashboard — Phase 1 Handoff
 
-อัปเดต: 2026-08-31  (Asia/Bangkok)
+อัปเดต: 2026-09-02 (Asia/Bangkok)
 
-## สถานะ
+## สถานะปัจจุบัน
 
-Backend v1 ถูกสร้างใน `backend/` โดยยังไม่แตะ Google Sheets/Drive จริง, ไม่ได้ import ข้อมูล production, ไม่ได้ `clasp push`, deploy หรือ commit
+Phase 1 อยู่ในสถานะ **repository beta-ready / secured read-only** สำหรับขั้นทดสอบกับ Google Apps Script และสำเนา Google Sheet ที่ได้รับอนุมัติ ยังไม่ถือว่า production deployment เสร็จ
 
-ผลทดสอบล่าสุด:
+Frontend ที่ยึดเป็นตัวล่าสุดคือ `dashboard-reference-prototype.html` และ build script จะนำไฟล์นี้ออกเป็น `dashboard.html` ภายใน Apps Script deployment package โดยตรง เพื่อไม่ให้เผลอ deploy `dashboard.html` รุ่นเก่า
+
+GitHub Actions ถูกเพิ่มแล้วที่ `.github/workflows/ci.yml` และรันทั้ง backend + dashboard test suite ทุก push/PR
+
+ผลยืนยันล่าสุดจาก GitHub Actions:
 
 ```text
-node --test backend/tests/*.test.mjs
-35 passed, 0 failed
+178 tests
+178 passed
+0 failed
 ```
 
-Task 1 และ Task 2 ผ่านการตรวจทานโมเดลสูงแล้ว
+Verified workflow run: `33585533686`
 
-Task 3 และ Task 4 มี implementation และ local tests แล้ว แต่ควรให้ reviewer ตรวจซ้ำบน Mac ก่อนเชื่อมระบบจริง โดยเฉพาะ import/reference retention, canonical acceptance, live adapters และ health freshness
+## Phase 1 Deployment Package
 
-## โครงสร้างไฟล์
-
-- `appsscript.json` — Apps Script V8, timezone `Asia/Bangkok`, scopes ขั้นต่ำ
-- `src/Config.gs` — ค่าคอนฟิกที่ไม่ฝัง Spreadsheet/Folder ID
-- `src/Schema.gs` — manifest และ schema planner
-- `src/ApiCore.gs` — response envelope `{ok,data,meta,error}`
-- `src/Auth.gs` — domain identity, roles และ permission checks
-- `src/Parsers.gs` — route/header/numeric parser สำหรับ Shopee/TikTok
-- `src/Canonical.gs` — accepted-batch selection และ deterministic restatement
-- `src/QueryService.gs` — dashboard aggregation, comparison, period availability
-- `src/Repository.gs` — bounded Spreadsheet repository และ in-memory repository
-- `src/SetupService.gs` — dry-run/setup, backup-before-write, folders/settings/admin
-- `src/ImportService.gs` — upload queue, hash/idempotency, file lifecycle, status
-- `src/ActionService.gs` — Action Tasks และ append-only history
-- `src/Rpc.gs` — public Apps Script RPC facade
-- `src/HealthService.gs` — system health checks
-- `README.md` — contract และ local verification notes
-
-## ไฟล์เก่า/ไฟล์ประกอบที่ต้องย้ายไปพร้อมโปรเจ็กต์
-
-ให้ย้ายทั้งโฟลเดอร์โปรเจ็กต์ ไม่ใช่เฉพาะ `backend/` เพื่อคงบริบทเดิม:
-
-- `dashboard.html` — static frontend เดิม ยังไม่ได้แก้
-- `PRODUCT.md` — product requirements เดิม
-- `DESIGN.md` — design notes เดิม
-- `handoff/PPG_Dashboard_Handoff_2026-08-31.md` — handoff เดิม
-- `handoff/assets/ppg-dashboard-ui-mockup-board-2026-08-31.png` — mockup asset
-- `.superpowers/sdd/backend-v1/` — implementation briefs, reports และ progress ledger
-
-โฟลเดอร์ `.codex/` และ `.impeccable/` เป็น metadata/tooling ของเครื่องเดิม ไม่จำเป็นต่อการรัน Backend บน Mac; เก็บไว้ได้ถ้าต้องการประวัติ แต่ไม่ควรนำไป deploy
-
-## ทดสอบบน Mac
-
-จากโฟลเดอร์โปรเจ็กต์:
+คำสั่ง build:
 
 ```bash
-node --test backend/tests/*.test.mjs
+node backend/scripts/build-phase1-appsscript.mjs <empty-output-directory>
 ```
 
-ถ้ามี Node รุ่นใหม่กว่า ให้ใช้ Node ที่รองรับ ES modules และ `node:test`
+Package มีเฉพาะ:
 
-ยังไม่ต้องใช้ `clasp push` หรือ deploy จนกว่าจะตรวจ safety gates ครบ
+- `appsscript.json`
+- `dashboard.html` — สร้างจาก `dashboard-reference-prototype.html`
+- `Config.gs`
+- `ApiCore.gs`
+- `Auth.gs`
+- `Phase1Repository.gs`
+- `Phase1ReadModel.gs`
+- `Rpc.gs`
 
-## ก่อนเชื่อม Google Sheets จริง
+โมดูล write-capable เช่น `ImportService.gs`, `ActionService.gs`, `SetupService.gs` และ repository แบบ write ไม่ถูกนำเข้า Phase 1 deployment package
 
-1. สำรองไฟล์ `PPG_Sales_DB` และบันทึก Spreadsheet ID ไว้นอก source control
-2. ตรวจ tabs/headers เดิมแบบ read-only
-3. รัน schema dry-run และหยุดทันทีหากมีชื่อ tab เดิมแต่ header ไม่ตรง
-4. ตรวจ adapter ของ Spreadsheet/Drive/Lock ใน `ImportService.gs`
-5. ยืนยันว่า setup มี confirmation token และ first Admin
-6. ทดสอบด้วยสำเนา template ใหม่ก่อนข้อมูลจริง
-7. ทำ closed-period reconciliation และ rollback test
-8. ขออนุมัติแยกก่อน import production และ deploy Web App
+## Security / Access Boundary
 
-## Contract สำคัญ
+- `phaseMode` = `READ_ONLY`
+- ผู้ใช้ต้องผ่าน Google identity + `Users` allowlist
+- ต้องตรงกับ configured workspace
+- Spreadsheet ID อ่านจาก Apps Script Script Property `PPG_SPREADSHEET_ID`
+- Browser ไม่ได้รับ Spreadsheet ID
+- Auth / allowlist failure ต้อง fail closed และไม่ fallback ไป Historical Snapshot
+- Write/admin RPC เดิมถูกคงชื่อไว้เพื่อ compatibility แต่ตอบ `READ_ONLY`
+- OAuth scope ของ package ใช้ `spreadsheets.readonly` + `userinfo.email`
 
-- Canonical GMV/Orders มาจาก `DB_Canonical_Daily` เท่านั้น
-- Product/Ads/Traffic/Creator/Competitor เป็น period-only ห้ามบวก GMV ซ้ำ
-- แถวที่ batch ยังไม่ `ACCEPTED` ห้ามแสดงบน Dashboard
-- Restatement เก็บทุก batch แต่เลือก accepted ล่าสุดแบบ deterministic
-- Day/Week ที่ไม่มี granularity ต้องตอบ `available:false` ไม่ใช่ศูนย์
-- ทุก public RPC ใช้ envelope เดียวกันและตรวจ permission ฝั่ง server
-- Roles: `EXECUTIVE`, `ANALYST`, `OPERATOR`, `ADMIN`
-- Source period ต้องแยกจาก imported timestamp
+## Data Contract สำคัญ
 
-## Public RPC
+- Confirmed GMV/Orders ใช้ secured read model เท่านั้น
+- Product / Ads / Traffic / Creator เป็น source/period scoped และห้ามนำยอดมาบวกซ้ำกับ Sales canonical
+- ค่า unsupported หรือไม่มี coverage แสดง `—` / unavailable ไม่เดาเป็นศูนย์
+- Data Through หมายถึงวันที่ข้อมูลครอบคลุมถึง ไม่ใช่เวลาที่ sync ล่าสุด
+- Competitor Benchmark Snapshot ต้องแยก period จาก selected Sales scope
+- Historical Snapshot เป็น fallback ที่ติดป้าย source/date ชัดเจน ไม่ใช่ live data
 
-`getBootstrap`, `getDashboard`, `getProducts`, `getMarketing`, `getCreators`, `getCompetitors`, `uploadFiles`, `getImportStatus`, `listImportBatches`, `listActions`, `createAction`, `updateAction`, `changeActionStatus`, `listUsers`, `setUserRole`, `getSystemHealth`
+## Automated Verification
 
-## ไฟล์ประกอบการพัฒนา
+CI รันคำสั่ง:
 
-- `.superpowers/sdd/backend-v1/progress.md` — ledger สถานะงาน
-- `.superpowers/sdd/backend-v1/task-1-report.md`
-- `.superpowers/sdd/backend-v1/task-2-report.md`
-- `.superpowers/sdd/backend-v1/task-3-report.md`
-- `.superpowers/sdd/backend-v1/task-4-report.md`
+```bash
+node --test backend/tests/*.test.mjs tests/*.test.mjs
+```
 
-## สิ่งที่ยังไม่ทำ
+Coverage ปัจจุบันรวม:
 
-- ยังไม่แก้ `dashboard.html`
-- ยังไม่ตั้งค่า `.clasp.json` ที่มี Spreadsheet ID จริง
-- ยังไม่สร้าง deployment configuration production
-- ยังไม่เชื่อม Google identity/Drive จริง
-- ยังไม่ import XLSX จริงจาก Inbox
+- Auth / allowlist / workspace isolation
+- Secured Phase 1 read model
+- Source/error/fallback behavior
+- Read-only RPC boundary
+- Deployment package least-privilege gate
+- Frontend production lock
+- Dashboard routes / flows / accessibility
+- Data contract / unavailable states
+- Release-gate documentation contracts
+
+Test output ถูกเก็บเป็น GitHub Actions artifact ชื่อ `phase1-test-output` ทุก run เพื่อใช้ตรวจ regression
+
+## สิ่งที่ยังไม่ได้ทำ และไม่ควรทำอัตโนมัติจาก repo
+
+สิ่งต่อไปนี้ต้องใช้ Google environment / credential / approval จริง จึงยังไม่ claim ว่าเสร็จ:
+
+1. ยังไม่ได้ตั้ง `.clasp.json` production
+2. ยังไม่ได้ตั้ง Script Properties จริง (`PPG_SPREADSHEET_ID`, `PPG_EXPECTED_WORKSPACE_ID`)
+3. ยังไม่ได้เชื่อม Google Sheet production จริง
+4. ยังไม่ได้ deploy Apps Script Web App production
+5. ยังไม่ได้รัน browser E2E ด้วย Google Account allowlist จริง
+6. ยังไม่ได้ทำ closed-period reconciliation กับข้อมูล production
+7. ยังไม่ได้ทดสอบ rollback/recovery บน production copy
+8. Phase 1 ยังไม่เปิด Import / persistent Actions / role administration
+
+## Beta Gate ถัดไป
+
+เมื่อได้รับ Google Sheet สำเนาทดสอบและสิทธิ์ที่เหมาะสม ให้ทำตามลำดับ:
+
+1. Build Phase 1 package จาก branch/main ที่ CI ผ่าน
+2. สร้าง Apps Script test project แยกจาก production
+3. ตั้ง Script Properties ใน Apps Script เท่านั้น ห้าม commit credential/ID ลง Git
+4. Deploy test Web App
+5. ทดสอบ allowlisted user / inactive user / unauthorized user
+6. ตรวจ Overview, Sales, Products, Marketing, Creators, Competitors, Review, Data Health และ Data Explorer กับ source ที่มีจริง
+7. ทำ data reconciliation กับช่วงข้อมูลปิดหนึ่งช่วง
+8. ทดสอบ source unavailable และ fallback label
+9. บันทึก Known Issues / friction / setup time
+10. ขออนุมัติแยกก่อน production deployment หรือเปิด write-capable Phase 2
+
+## Local Verification
+
+ถ้ามี repo อยู่บนเครื่อง:
+
+```bash
+node --test backend/tests/*.test.mjs tests/*.test.mjs
+```
+
+หาก test ใด fail ให้แก้ root cause ก่อน deploy ห้าม bypass release gate หรือแก้ด้วยการปิด test
