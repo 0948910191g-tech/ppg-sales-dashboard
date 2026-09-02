@@ -7,6 +7,7 @@ import { chromium } from 'playwright';
 
 const root = process.cwd();
 const port = 4173;
+const HARD_DIAGNOSTIC_TIMEOUT_MS = 2500;
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -62,33 +63,40 @@ const routes = [
   ['data-explorer', 'Data Explorer']
 ];
 
+function hardTimeout(label, ms = HARD_DIAGNOSTIC_TIMEOUT_MS) {
+  return new Promise((resolve) => setTimeout(() => resolve({ diagnosticTimeout: label, ms }), ms));
+}
+
 async function snapshotState(route) {
-  return page.evaluate((expectedRoute) => ({
-    expectedRoute,
-    href: location.href,
-    hash: location.hash,
-    titleHeadingCount: document.querySelectorAll('.title-row h1').length,
-    titleHeading: document.querySelector('.title-row h1')?.textContent?.trim() || null,
-    contentCount: document.querySelectorAll('main.content').length,
-    overview: document.querySelector('#overview-view') ? {
-      hidden: document.querySelector('#overview-view').hidden,
-      connected: document.querySelector('#overview-view').isConnected
-    } : null,
-    sales: document.querySelector('#sales-performance-view') ? {
-      hidden: document.querySelector('#sales-performance-view').hidden,
-      connected: document.querySelector('#sales-performance-view').isConnected
-    } : null,
-    completion: document.querySelector('.ui-completion-view') ? {
-      id: document.querySelector('.ui-completion-view').id,
-      hidden: document.querySelector('.ui-completion-view').hidden,
-      route: document.querySelector('.ui-completion-view').dataset.route || null,
-      routeView: document.querySelector('.ui-completion-view').dataset.routeView || null,
-      connected: document.querySelector('.ui-completion-view').isConnected
-    } : null,
-    activeRoutes: [...document.querySelectorAll('[data-route][aria-current="page"]')].map((node) => node.dataset.route),
-    navCount: document.querySelectorAll(`button[data-route="${expectedRoute}"]`).length,
-    bodyText: document.body?.innerText?.slice(0, 300) || null
-  }), route);
+  return Promise.race([
+    page.evaluate((expectedRoute) => ({
+      expectedRoute,
+      href: location.href,
+      hash: location.hash,
+      titleHeadingCount: document.querySelectorAll('.title-row h1').length,
+      titleHeading: document.querySelector('.title-row h1')?.textContent?.trim() || null,
+      contentCount: document.querySelectorAll('main.content').length,
+      overview: document.querySelector('#overview-view') ? {
+        hidden: document.querySelector('#overview-view').hidden,
+        connected: document.querySelector('#overview-view').isConnected
+      } : null,
+      sales: document.querySelector('#sales-performance-view') ? {
+        hidden: document.querySelector('#sales-performance-view').hidden,
+        connected: document.querySelector('#sales-performance-view').isConnected
+      } : null,
+      completion: document.querySelector('.ui-completion-view') ? {
+        id: document.querySelector('.ui-completion-view').id,
+        hidden: document.querySelector('.ui-completion-view').hidden,
+        route: document.querySelector('.ui-completion-view').dataset.route || null,
+        routeView: document.querySelector('.ui-completion-view').dataset.routeView || null,
+        connected: document.querySelector('.ui-completion-view').isConnected
+      } : null,
+      activeRoutes: [...document.querySelectorAll('[data-route][aria-current="page"]')].map((node) => node.dataset.route),
+      navCount: document.querySelectorAll(`button[data-route="${expectedRoute}"]`).length,
+      bodyText: document.body?.innerText?.slice(0, 300) || null
+    }), route),
+    hardTimeout(`snapshot:${route}`)
+  ]);
 }
 
 async function assertRoute(route, headingText) {
@@ -102,6 +110,7 @@ async function assertRoute(route, headingText) {
 
   const state = await snapshotState(route);
   console.log(`route:state ${route} ${JSON.stringify(state)}`);
+  assert.equal(state.diagnosticTimeout, undefined, `${route}: browser renderer stopped responding during route transition`);
   assert.equal(state.titleHeadingCount, 1, `${route}: shared top heading must remain mounted; state=${JSON.stringify(state)} errors=${runtimeErrors.join(' | ')}`);
   assert.equal(state.titleHeading?.includes(headingText), true, `${route}: top heading should contain ${headingText}; got ${state.titleHeading}`);
   assert.equal(await nav.getAttribute('aria-current'), 'page', `${route}: nav should be active`);
@@ -136,12 +145,14 @@ try {
     await assertRoute(route, heading);
   }
 
+  console.log('interaction:start marketing-ads');
   await assertRoute('marketing-ads', 'Marketing & Ads');
   await page.locator('[data-page-filter="channel"]').selectOption('meta');
   assert.equal(await page.locator('[data-page-filter="channel"]').inputValue(), 'meta', 'Marketing channel filter should remain operable');
   await page.locator('[data-chart-tab="weekly"]').click();
   assert.equal(await page.locator('[data-chart-tab="weekly"]').getAttribute('aria-selected'), 'true', 'Marketing weekly chart tab should become selected');
 
+  console.log('interaction:start review');
   await assertRoute('review', 'Review');
   const reviewButton = page.locator('[data-open-signal]').first();
   await reviewButton.click();
@@ -149,12 +160,14 @@ try {
   await page.locator('[data-drawer-close]').click();
   assert.equal(await page.locator('#ui-context-drawer-backdrop').isVisible(), false, 'Review drawer should close');
 
+  console.log('interaction:start data-explorer');
   await assertRoute('data-explorer', 'Data Explorer');
   await page.locator('[data-explorer-tab="chart"]').click();
   assert.equal(await page.locator('[data-explorer-panel="chart"]').isVisible(), true, 'Data Explorer chart tab should render');
   await page.locator('[data-explorer-tab="metadata"]').click();
   assert.equal(await page.locator('[data-explorer-panel="metadata"]').isVisible(), true, 'Data Explorer metadata tab should render');
 
+  console.log('sequence:start return-path');
   await assertRoute('overview', 'Overview');
   await assertRoute('sales-performance', 'Sales Performance');
   await assertRoute('marketing-ads', 'Marketing & Ads');
@@ -163,12 +176,15 @@ try {
   console.log('browser-smoke: all primary routes and core interactions passed');
 } catch (error) {
   failed = true;
-  const state = await snapshotState('failure').catch(() => null);
+  const state = await snapshotState('failure').catch(() => ({ diagnostic: 'snapshot failed' }));
   fs.writeFileSync('browser-smoke-state.json', JSON.stringify({ state, runtimeErrors, error: String(error?.stack || error) }, null, 2));
-  await page.screenshot({ path: 'browser-smoke-failure.png', fullPage: true }).catch(() => {});
+  await Promise.race([
+    page.screenshot({ path: 'browser-smoke-failure.png', fullPage: true }).catch(() => {}),
+    hardTimeout('failure-screenshot', 1500)
+  ]);
   throw error;
 } finally {
-  await browser.close();
+  await Promise.race([browser.close().catch(() => {}), hardTimeout('browser-close', 1500)]);
   await new Promise((resolve) => server.close(resolve));
   if (!failed && fs.existsSync('browser-smoke-state.json')) fs.unlinkSync('browser-smoke-state.json');
 }
