@@ -47,4 +47,6 @@ jobs:
           path: |
             test-output.txt
             browser-smoke-output.txt
-          if-no-files-found: warn
+            browser-smoke-state.json
+            browser-smoke-failure.png
+          if-no-files-found: ignore
