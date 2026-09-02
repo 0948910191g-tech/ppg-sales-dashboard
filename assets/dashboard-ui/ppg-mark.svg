@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PPG mark">
+  <path fill="#ffb000" d="M30 6c5 0 8 6 5 10l-7 9-9-7c-4-3-2-10 3-11l8-1Z"/>
+  <path fill="#ef4b23" d="M50 14c5 3 4 10-1 12l-10 4-4-11 8-6c3-2 5-1 7 1Z"/>
+  <path fill="#f8d12b" d="M55 36c1 5-4 9-9 7l-10-4 4-11 10 2c3 1 4 3 5 6Z"/>
+  <path fill="#ee7e24" d="M36 56c-5 2-10-3-8-8l4-10 11 3-1 10c0 3-3 4-6 5Z"/>
+  <path fill="#f3a300" d="M13 49c-4-3-3-9 2-11l10-5 5 10-7 8c-3 2-7 1-10-2Z"/>
+  <circle cx="32" cy="32" r="8" fill="#fff"/>
+</svg>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PPG Dashboard Design Prototype</title>
+  <meta name="description" content="Throwaway UI prototype for the PPG Omnichannel Commerce Executive Dashboard.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #f5f2ec;
+      --paper: #fffdfa;
+      --paper-2: #f0ede6;
+      --ink: #13243c;
+      --muted: #697587;
+      --soft: #a2abb6;
+      --rule: #ded8cd;
+      --blue: #2463d8;
+      --blue-2: #e8efff;
+      --green: #168566;
+      --green-2: #e5f4ed;
+      --orange: #ee4d2d;
+      --orange-2: #fff0eb;
+      --amber: #9b6504;
+      --amber-2: #fff4d5;
+      --red: #c23e52;
+      --red-2: #fdecef;
+      --shadow: 0 18px 45px rgba(29, 42, 63, .08);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--canvas); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Prompt, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #7ea8ff; outline-offset: 3px; }
+    ::selection { color: #fff; background: var(--blue); }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: #c9c4ba; border-radius: 20px; border: 2px solid var(--canvas); }
+    .num { font-family: Outfit, sans-serif; font-variant-numeric: tabular-nums; }
+    .icon { width: 18px; height: 18px; display: inline-block; flex: 0 0 auto; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .prototype-note {
+      position: fixed; z-index: 20; top: 14px; right: 18px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border: 1px solid #e7c76f; border-radius: 999px;
+      color: #755000; background: #fff8de;
+      font-size: 11px; font-weight: 700;
+    }
+    .prototype-note .dot { width: 7px; height: 7px; border-radius: 50%; background: #d79a1c; }
+
+    /* Shared content primitives */
+    .scope-bar { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .scope-bar .scope-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+    .scope-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .scope-chip svg { color: var(--soft); }
+    .scope-chip.dim { color: var(--muted); background: var(--paper-2); }
+    .state { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .state.live { color: var(--green); background: var(--green-2); }
+    .state.warn { color: var(--amber); background: var(--amber-2); }
+    .state.bad { color: var(--red); background: var(--red-2); }
+    .state .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .section-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .panel { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); box-shadow: 0 2px 0 rgba(39, 45, 54, .02); }
+    .panel-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+    .panel-head h2, .panel-head h3 { margin: 0; font-size: 16px; line-height: 1.25; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .text-button { border: 0; padding: 0; color: var(--blue); background: transparent; font-size: 12px; font-weight: 700; }
+    .primary-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 0; border-radius: 10px; padding: 8px 14px; color: #fff; background: var(--blue); font-size: 12px; font-weight: 700; box-shadow: 0 7px 16px rgba(19, 36, 60, .18); }
+    .primary-button:hover { background: #1854c0; }
+    .ghost-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 1px solid var(--rule); border-radius: 10px; padding: 8px 13px; color: var(--ink); background: var(--paper); font-size: 12px; font-weight: 700; }
+    .ghost-button:hover { border-color: var(--blue); color: var(--blue); }
+    .kpi-value { margin-top: 8px; font: 700 28px/1 Outfit, sans-serif; letter-spacing: -.03em; }
+    .kpi-meta { display: flex; align-items: center; gap: 7px; margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .trend-up { color: var(--green); font-weight: 700; }
+    .trend-down { color: var(--red); font-weight: 700; }
+    .trend-none { color: var(--amber); font-weight: 700; }
+    .channel-mark { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 7px; font: 700 11px Outfit, sans-serif; color: #fff; }
+    .channel-mark.shopee { background: var(--orange); }
+    .channel-mark.tiktok { background: #111318; }
+    .mini-link { display: inline-flex; align-items: center; gap: 6px; color: var(--blue); font-size: 12px; font-weight: 700; text-decoration: none; }
+    .mini-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Variant A: Command Center */
+    .a-shell { min-height: 100vh; display: grid; grid-template-columns: 218px minmax(0, 1fr); }
+    .a-side { padding: 26px 16px; color: #c1ccdc; background: var(--ink); }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 26px; }
+    .brand-badge { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: var(--blue); }
+    .brand strong { display: block; color: #fff; font: 700 16px/1 Outfit, sans-serif; }
+    .brand span { display: block; margin-top: 3px; color: #8d9db5; font-size: 10px; }
+    .a-nav { display: grid; gap: 5px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .08); }
+    .a-nav button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; border: 0; border-radius: 10px; padding: 10px 12px; color: #9cabc0; background: transparent; text-align: left; font-size: 12px; font-weight: 600; }
+    .a-nav button:hover, .a-nav button.active { color: #fff; background: #214f9f; }
+    .a-side-foot { margin-top: 38vh; padding: 17px 10px 0; border-top: 1px solid rgba(255, 255, 255, .08); color: #9cabc0; font-size: 10px; line-height: 1.6; }
+    .a-main { min-width: 0; padding: 34px clamp(22px, 4vw, 62px) 120px; }
+    .a-top { display: flex; align-items: start; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+    .a-top h1 { margin: 0; font-size: 28px; letter-spacing: -.035em; }
+    .a-top p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .a-scope { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 14px; margin-bottom: 28px; border: 1px solid var(--rule); border-radius: 12px; background: rgba(255, 253, 250, .7); }
+    .a-scope .chips { display: flex; flex-wrap: wrap; gap: 7px; min-width: 0; }
+    .a-scope .scope-chip { min-height: 34px; padding: 6px 10px; font-size: 11px; }
+    .a-scope .state { flex-shrink: 0; }
+    .a-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .72fr); gap: 20px; align-items: start; }
+    .a-kpi-panel { padding: 22px; }
+    .a-kpis { display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); gap: 0; margin: 22px -22px 0; border-top: 1px solid var(--rule); }
+    .a-kpi { min-height: 126px; padding: 18px 20px; border-right: 1px solid var(--rule); }
+    .a-kpi:first-child { background: #f7faff; }
+    .a-kpi:last-child { border-right: 0; }
+    .a-kpi h3 { margin: 0; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .a-kpi:first-child .kpi-value { font-size: 38px; }
+    .a-kpi:first-child .kpi-meta { color: var(--blue); }
+    .a-chart-panel { padding: 22px; margin-top: 20px; }
+    .chart-legend { display: flex; gap: 14px; color: var(--muted); font-size: 11px; }
+    .legend-dot { width: 8px; height: 8px; display: inline-block; border-radius: 50%; margin-right: 5px; background: var(--blue); }
+    .legend-dot.orange { background: var(--orange); }
+    .chart { position: relative; height: 230px; margin-top: 18px; padding: 0 0 26px 32px; border-bottom: 1px solid var(--rule); background: repeating-linear-gradient(to bottom, transparent 0, transparent 54px, #ebe7df 55px); }
+    .chart svg { position: absolute; inset: 0 0 26px 32px; width: calc(100% - 32px); height: calc(100% - 26px); overflow: visible; }
+    .chart-labels { position: absolute; right: 0; bottom: 3px; left: 32px; display: flex; justify-content: space-between; color: var(--soft); font: 10px Outfit, sans-serif; }
+    .y-labels { position: absolute; top: 0; bottom: 26px; left: 0; display: flex; flex-direction: column; justify-content: space-between; color: var(--soft); font: 10px Outfit, sans-serif; }
+    .a-queue { padding: 22px; }
+    .queue-count { color: var(--red); font: 700 28px Outfit, sans-serif; }
+    .queue-list { display: grid; gap: 10px; margin-top: 18px; }
+    .signal { padding: 14px 0; border-top: 1px solid var(--rule); }
+    .signal:first-child { border-top: 0; padding-top: 0; }
+    .signal-row { display: flex; justify-content: space-between; gap: 12px; }
+    .signal h3 { margin: 0; font-size: 13px; line-height: 1.4; }
+    .signal p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .priority { color: var(--red); font-size: 10px; font-weight: 700; }
+    .a-channel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 18px 0 0; margin-top: 20px; border-top: 1px solid var(--rule); }
+    .channel-row { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+    .channel-row strong { display: block; color: var(--ink); font: 600 15px Outfit, sans-serif; }
+    .empty-inline { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 10px 12px; border-radius: 9px; color: var(--amber); background: var(--amber-2); font-size: 11px; line-height: 1.45; }
+
+    /* Variant B: Metric Canvas */
+    .b-shell { min-height: 100vh; padding: 26px clamp(22px, 5vw, 76px) 120px; }
+    .b-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+    .b-brand { display: flex; align-items: center; gap: 10px; }
+    .b-brand .brand-badge { width: 30px; height: 30px; border-radius: 9px; }
+    .b-brand strong { font-size: 15px; }
+    .b-brand small { color: var(--muted); font-size: 10px; }
+    .b-nav { display: flex; gap: 4px; }
+    .b-nav button { border: 0; border-radius: 8px; padding: 9px 12px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 600; }
+    .b-nav button.active, .b-nav button:hover { color: var(--ink); background: var(--paper); box-shadow: 0 2px 8px rgba(29, 42, 63, .06); }
+    .b-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 38px 0 24px; }
+    .b-intro h1 { margin: 0; font-size: 30px; letter-spacing: -.04em; }
+    .b-intro p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .b-context { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+    .b-context .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .b-context .scope-chip { min-height: 32px; border: 0; background: transparent; padding: 5px 0; }
+    .b-context .scope-chip:not(:last-child)::after { content: '/'; margin-left: 10px; color: var(--rule); }
+    .b-hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .78fr); gap: 20px; margin-top: 24px; }
+    .b-hero-main { min-height: 370px; padding: 28px; background: var(--ink); color: #fff; overflow: hidden; position: relative; }
+    .b-hero-main::after { content: ''; position: absolute; width: 380px; height: 380px; right: -120px; bottom: -205px; border: 1px solid rgba(255,255,255,.15); border-radius: 50%; box-shadow: 0 0 0 35px rgba(255,255,255,.03), 0 0 0 70px rgba(255,255,255,.02); }
+    .b-hero-main h2 { margin: 0; color: #bec9da; font-size: 12px; font-weight: 500; }
+    .b-hero-value { margin-top: 14px; font: 700 clamp(50px, 7vw, 86px)/.95 Outfit, sans-serif; letter-spacing: -.06em; }
+    .b-hero-meta { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: #b9c8df; font-size: 12px; }
+    .b-hero-main .trend-up { color: #70d5ad; }
+    .b-hero-chart { position: absolute; right: 28px; bottom: 25px; left: 28px; height: 100px; opacity: .9; }
+    .b-hero-chart svg { width: 100%; height: 100%; overflow: visible; }
+    .b-hero-note { position: absolute; right: 28px; bottom: 30px; color: #99abc5; font-size: 10px; }
+    .b-side-stack { display: grid; gap: 12px; }
+    .b-side-card { padding: 20px; }
+    .b-side-card h3 { margin: 0; font-size: 13px; }
+    .b-side-card .big { margin-top: 14px; font: 700 29px Outfit, sans-serif; }
+    .b-side-card p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .b-channel-bars { display: grid; gap: 14px; margin-top: 18px; }
+    .bar-label { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--muted); font-size: 11px; }
+    .bar-label strong { color: var(--ink); font-family: Outfit, sans-serif; }
+    .bar-track { height: 7px; border-radius: 99px; background: var(--paper-2); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: inherit; background: var(--orange); }
+    .bar-fill.dark { background: #232833; }
+    .b-lower { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 20px; margin-top: 20px; }
+    .b-table { padding: 22px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .table th { padding: 15px 0 11px; color: var(--muted); border-bottom: 1px solid var(--rule); text-align: left; font-size: 10px; font-weight: 600; }
+    .table td { padding: 15px 0; border-bottom: 1px solid #eeeae3; }
+    .table td:last-child, .table th:last-child { text-align: right; }
+    .table .product { display: flex; align-items: center; gap: 9px; font-weight: 600; }
+    .product-thumb { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: #39506f; background: #e8edf5; font: 700 11px Outfit, sans-serif; }
+    .b-review { padding: 22px; background: #f9f7f2; }
+    .review-hero { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+    .review-hero h2 { margin: 0; font-size: 16px; }
+    .review-hero .queue-count { font-size: 34px; }
+    .review-item { padding: 15px 0; border-top: 1px solid var(--rule); }
+    .review-item h3 { margin: 0; font-size: 12px; }
+    .review-item p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+    /* Variant C: Operations Workspace */
+    .c-shell { min-height: 100vh; display: grid; grid-template-columns: 68px minmax(0, 1fr); }
+    .c-rail { display: flex; flex-direction: column; align-items: center; gap: 17px; padding: 24px 12px; color: #a9b8ca; background: #182b45; }
+    .c-rail .brand-badge { width: 34px; height: 34px; margin-bottom: 20px; }
+    .c-rail button { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 12px; color: #9baec7; background: transparent; }
+    .c-rail button.active, .c-rail button:hover { color: #fff; background: #285fc2; }
+    .c-rail .rail-bottom { margin-top: auto; }
+    .c-main { min-width: 0; padding: 28px clamp(20px, 4vw, 56px) 120px; }
+    .c-top { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+    .c-top h1 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
+    .c-top p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .c-top-actions { display: flex; align-items: center; gap: 9px; }
+    .c-context { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 9px; margin-top: 22px; }
+    .c-select { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; border: 1px solid var(--rule); border-radius: 10px; padding: 8px 12px; color: var(--ink); background: var(--paper); font-size: 11px; font-weight: 600; }
+    .c-select span { display: block; color: var(--soft); font-size: 10px; font-weight: 500; }
+    .c-select em { color: var(--muted); font-style: normal; }
+    .c-status { display: flex; align-items: center; justify-content: center; min-width: 150px; padding: 8px 12px; border-radius: 10px; background: var(--amber-2); color: var(--amber); font-size: 10px; font-weight: 700; text-align: center; }
+    .c-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+    .c-kpi { padding: 17px; }
+    .c-kpi-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .c-kpi .kpi-value { font-size: 26px; }
+    .c-kpi .mini-icon { color: var(--blue); }
+    .c-workspace { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(270px, .6fr); gap: 18px; margin-top: 18px; }
+    .c-table-panel { padding: 21px; }
+    .c-table-tools { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 18px 0 10px; }
+    .segmented { display: inline-flex; gap: 3px; padding: 3px; border-radius: 9px; background: var(--paper-2); }
+    .segmented button { border: 0; border-radius: 7px; padding: 7px 11px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 600; }
+    .segmented button.active { color: var(--ink); background: var(--paper); box-shadow: 0 2px 5px rgba(20,35,60,.08); }
+    .search { display: flex; align-items: center; gap: 7px; max-width: 180px; min-height: 34px; border: 1px solid var(--rule); border-radius: 8px; padding: 5px 9px; color: var(--soft); background: var(--paper); font-size: 11px; }
+    .search input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 11px; }
+    .c-evidence { padding: 21px; }
+    .evidence-block { padding: 14px 0; border-top: 1px solid var(--rule); }
+    .evidence-block:first-of-type { margin-top: 18px; }
+    .evidence-block h3 { margin: 0 0 5px; font-size: 12px; }
+    .evidence-block p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .coverage-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+    .coverage-line strong { color: var(--ink); font-family: Outfit, sans-serif; }
+    .c-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+    .c-bottom .panel { padding: 21px; }
+    .simple-list { display: grid; gap: 10px; margin-top: 17px; }
+    .simple-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 10px; border-top: 1px solid #eeeae3; color: var(--muted); font-size: 11px; }
+    .simple-list li strong { color: var(--ink); font-size: 12px; }
+
+    /* Shared prototype switcher and drawer */
+    .switcher { position: fixed; z-index: 50; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #253550; border-radius: 999px; color: #fff; background: #172942; box-shadow: 0 14px 32px rgba(10, 24, 45, .25); }
+    .switcher button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; color: #c8d6ec; background: transparent; }
+    .switcher button:hover { color: #fff; background: #2a4f88; }
+    .switcher .variant-name { min-width: 150px; text-align: center; font-size: 11px; font-weight: 600; }
+    .switcher .variant-name small { display: block; margin-top: 1px; color: #8ea4c4; font-size: 9px; font-weight: 400; }
+    .drawer-backdrop { position: fixed; z-index: 60; inset: 0; display: none; background: rgba(16, 32, 54, .35); }
+    .drawer-backdrop.open { display: block; }
+    .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 92vw); padding: 28px; overflow-y: auto; background: var(--paper); box-shadow: -18px 0 42px rgba(16, 32, 54, .18); }
+    .drawer-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--rule); }
+    .drawer-head h2 { margin: 0; font-size: 18px; }
+    .drawer-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .close { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--rule); border-radius: 9px; color: var(--ink); background: transparent; }
+    .drawer dl { display: grid; grid-template-columns: 110px 1fr; gap: 13px 16px; margin: 22px 0; font-size: 12px; }
+    .drawer dt { color: var(--muted); }
+    .drawer dd { margin: 0; font-weight: 600; }
+    .drawer .drawer-note { padding: 14px; border-radius: 10px; color: var(--amber); background: var(--amber-2); font-size: 11px; line-height: 1.55; }
+
+    @media (max-width: 1000px) {
+      .a-shell, .c-shell { grid-template-columns: 1fr; }
+      .a-side { display: flex; align-items: center; gap: 24px; padding: 14px 20px; }
+      .brand { padding: 0; }
+      .a-nav { display: flex; gap: 3px; padding: 0; border: 0; }
+      .a-nav button { width: auto; min-height: 38px; padding: 8px 10px; }
+      .a-nav button span { display: none; }
+      .a-side-foot { display: none; }
+      .c-rail { flex-direction: row; padding: 10px 18px; }
+      .c-rail .brand-badge { margin: 0 12px 0 0; }
+      .c-rail button { width: 38px; height: 38px; }
+      .c-rail .rail-bottom { margin: 0 0 0 auto; }
+      .a-layout, .b-hero, .b-lower, .c-workspace { grid-template-columns: 1fr; }
+      .a-side .brand span, .a-side .brand strong { display: none; }
+    }
+    @media (max-width: 720px) {
+      .prototype-note { top: 8px; right: 8px; font-size: 9px; }
+      .a-main, .c-main { padding: 24px 16px 110px; }
+      .b-shell { padding: 18px 16px 110px; }
+      .a-top, .b-intro, .c-top { display: block; }
+      .a-top .state, .b-intro .state, .c-top-actions { margin-top: 14px; }
+      .a-scope, .b-context { display: block; }
+      .a-scope .state, .b-context .state { margin-top: 10px; }
+      .a-kpis, .c-kpis { grid-template-columns: 1fr 1fr; }
+      .a-kpi { border-bottom: 1px solid var(--rule); }
+      .a-kpi:nth-child(2) { border-right: 0; }
+      .a-kpi:first-child { grid-column: 1 / -1; }
+      .a-channel, .c-bottom { grid-template-columns: 1fr; }
+      .b-header { display: block; }
+      .b-nav { margin-top: 15px; overflow-x: auto; }
+      .b-nav button { white-space: nowrap; }
+      .b-hero-main { min-height: 330px; }
+      .c-context { grid-template-columns: 1fr 1fr; }
+      .c-status { grid-column: 1 / -1; }
+      .c-table-tools { align-items: stretch; flex-direction: column; }
+      .search { max-width: none; }
+      .switcher { bottom: 10px; }
+      .switcher .variant-name { min-width: 124px; }
+      .table { min-width: 470px; }
+      .c-table-panel { overflow-x: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="prototype-note"><span class="dot"></span> PROTOTYPE · synthetic preview</div>
+
+  <svg class="sr-only" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l3-4 3 2 5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M3 6h.01M3 12h.01M3 18h.01" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 3v4M17 3v4M3 10h18" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m8 12 2.7 2.7L16.5 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <main id="prototypeRoot"></main>
+  <div id="drawerBackdrop" class="drawer-backdrop" role="presentation">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-head"><div><h2 id="drawerTitle">ยอดขาย Shopee ต่ำกว่าช่วงก่อนหน้า</h2><p>Review signal · synthetic evidence</p></div><button class="close" type="button" aria-label="ปิดหลักฐาน" onclick="closeDrawer()"><svg class="icon"><use href="#i-close"></use></svg></button></div>
+      <dl><dt>Metric</dt><dd>GMV</dd><dt>ช่วงข้อมูล</dt><dd>1–31 สิงหาคม 2026</dd><dt>เปรียบเทียบ</dt><dd>ไม่มี coverage ที่ยืนยันได้</dd><dt>Platform</dt><dd>Shopee</dd><dt>Source</dt><dd>Daily_Sales · synthetic preview</dd></dl>
+      <div class="drawer-note">ยังไม่มีข้อมูลเปรียบเทียบจาก secured read model จึงแสดงสัญญาณนี้เพื่อ walkthrough เท่านั้น ไม่ใช่ข้อสรุปทางธุรกิจ</div>
+      <div style="display:flex; gap:9px; margin-top:20px"><button class="primary-button" type="button" onclick="closeDrawer()">รับทราบและกลับไป Overview</button><button class="ghost-button" type="button" onclick="closeDrawer()">ปิด</button></div>
+    </aside>
+  </div>
+
+  <script>
+    // PROTOTYPE QUESTION: Which dashboard structure makes Status -> KPI -> Trend -> Cause -> Review easiest to scan?
+    const variants = {
+      A: { label: 'Command Center', sub: 'rail + attention queue' },
+      B: { label: 'Metric Canvas', sub: 'full-width executive view' },
+      C: { label: 'Operations Workspace', sub: 'table-first investigation' }
+    };
+    const icon = id => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"></use></svg>`;
+    const state = `<span class="state warn"><span class="dot"></span>Historical Snapshot · coverage unavailable</span>`;
+    const scope = `<div class="scope-bar"><span class="scope-label">Scope</span><div class="chips"><span class="scope-chip">${icon('calendar')} 1–31 ส.ค. 2026</span><span class="scope-chip">${icon('chart')} ทุกแพลตฟอร์ม</span><span class="scope-chip dim">Compare: unavailable</span></div></div>`;
+    const chartSvg = `<svg viewBox="0 0 700 220" preserveAspectRatio="none" aria-label="กราฟยอดขายตัวอย่าง"><path d="M0 178 C50 160 70 190 116 145 S190 143 234 129 S294 82 342 112 S405 78 452 89 S512 52 554 72 S630 31 700 42" fill="none" stroke="#2463d8" stroke-width="4" stroke-linecap="round"/><path d="M0 198 C50 187 76 200 116 183 S190 169 234 180 S294 130 342 158 S405 140 452 151 S512 119 554 132 S630 108 700 113" fill="none" stroke="#ee4d2d" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="5 7"/></svg>`;
+
+    function navButtons(active = 'Overview') {
+      return `<button class="active" type="button">${icon('grid')}<span>${active === 'Overview' ? 'Overview' : 'Overview'}</span></button><button type="button">${icon('chart')}<span>Performance</span></button><button type="button">${icon('list')}<span>Review Queue</span></button><button type="button">${icon('database')}<span>Data</span></button>`;
+    }
+
+    function variantA() {
+      return `<div class="a-shell"><aside class="a-side"><div><div class="brand"><div class="brand-badge">${icon('chart')}</div><div><strong>PPG</strong><span>Commerce command center</span></div></div><nav class="a-nav" aria-label="Main navigation">${navButtons()}</nav></div><div class="a-side-foot"><strong>READ-ONLY MODE</strong><br>Data coverage is shown before interpretation.<br><br>PPG Team · Admin</div></aside><section class="a-main"><div class="a-top"><div><h1>Overview</h1><p>ภาพรวมที่พร้อมสำหรับการ Review ใน 10 วินาที</p></div>${state}</div><div class="a-scope">${scope}${state}</div><div class="a-layout"><div><section class="panel a-kpi-panel"><div class="panel-head"><div><p class="section-label">Business pulse</p><h2>ธุรกิจกำลังไปทางไหน</h2><p>ตัวเลขหลักของช่วงที่เลือก · illustrative data</p></div><button class="ghost-button" type="button" onclick="openDrawer()">${icon('eye')} ดู evidence</button></div><div class="a-kpis"><div class="a-kpi"><h3>ยอดขายรวม (GMV)</h3><div class="kpi-value num">฿1.28M</div><div class="kpi-meta"><span class="trend-up">+18.4%</span> จากข้อมูลช่วงเดียวกัน</div></div><div class="a-kpi"><h3>Orders</h3><div class="kpi-value num">486</div><div class="kpi-meta"><span class="trend-up">+12.1%</span></div></div><div class="a-kpi"><h3>Units</h3><div class="kpi-value num">742</div><div class="kpi-meta"><span class="trend-up">+9.7%</span></div></div><div class="a-kpi"><h3>AOV</h3><div class="kpi-value num">฿2,634</div><div class="kpi-meta"><span class="trend-none">—</span> comparison unavailable</div></div></div><div class="a-channel"><div class="channel-row"><span class="channel-mark shopee">S</span><div><strong class="num">฿742K</strong>Shopee</div></div><div class="channel-row"><span class="channel-mark tiktok">T</span><div><strong class="num">฿538K</strong>TikTok Shop</div></div><div class="channel-row"><span class="channel-mark" style="color:var(--blue);background:var(--blue-2)">Σ</span><div><strong class="num">58% / 42%</strong>channel mix</div></div></div></section><section class="panel a-chart-panel"><div class="panel-head"><div><p class="section-label">Trend</p><h2>GMV เคลื่อนไหวอย่างไร</h2><p>Daily Sales · 1–31 สิงหาคม 2026 · synthetic</p></div><div class="chart-legend"><span><i class="legend-dot"></i>Total</span><span><i class="legend-dot orange"></i>Shopee</span></div></div><div class="chart"><div class="y-labels"><span>฿60K</span><span>฿40K</span><span>฿20K</span><span>฿0</span></div>${chartSvg}<div class="chart-labels"><span>1 Aug</span><span>8 Aug</span><span>15 Aug</span><span>22 Aug</span><span>31 Aug</span></div></div></section></div><section class="panel a-queue"><div class="panel-head"><div><p class="section-label">Cause → Review</p><h2>Attention Queue</h2><p>สัญญาณที่ควรเปิดหลักฐาน</p></div><div class="queue-count num">03</div></div><div class="queue-list"><article class="signal"><div class="signal-row"><h3>ยอดขาย Shopee ต่ำกว่าช่วงก่อนหน้า</h3><span class="priority">HIGH</span></div><p>GMV · Shopee · comparison unavailable</p><button class="text-button" type="button" onclick="openDrawer()">เปิด Context →</button></article><article class="signal"><div class="signal-row"><h3>AOV สูงขึ้น แต่ Orders ยังไม่ยืนยัน</h3><span class="priority" style="color:var(--amber)">CHECK</span></div><p>AOV · ทุกแพลตฟอร์ม · source: Daily_Sales</p><button class="text-button" type="button" onclick="openDrawer()">เปิด Context →</button></article><article class="signal"><div class="signal-row"><h3>Product coverage ยังไม่พร้อมใช้</h3><span class="priority" style="color:var(--muted)">DATA</span></div><p>Product_Period · period-only source</p><button class="text-button" type="button" onclick="openDrawer()">ดู Data Health →</button></article></div><div class="empty-inline">${icon('database')} ยังไม่มีข้อมูลเปรียบเทียบครบ จึงไม่แสดง delta เพิ่มเติม</div></section></div></section></div>`;
+    }
+
+    function variantB() {
+      return `<div class="b-shell"><header class="b-header"><div class="b-brand"><div class="brand-badge">${icon('chart')}</div><div><strong>PPG Commerce</strong><small>Executive dashboard · read-only</small></div></div><nav class="b-nav" aria-label="Main navigation"><button class="active" type="button">Overview</button><button type="button">Performance</button><button type="button">Review</button><button type="button">Data Health</button></nav><button class="ghost-button" type="button" onclick="openDrawer()">${icon('eye')} Review signals</button></header><div class="b-intro"><div><h1>ภาพรวมยอดขาย</h1><p>เริ่มจากตัวเลขเดียว แล้วค่อยลงไปดู channel และหลักฐาน</p></div>${state}</div><div class="b-context">${scope}${state}</div><section class="b-hero"><div class="panel b-hero-main"><h2>Confirmed GMV · ช่วงที่เลือก</h2><div class="b-hero-value num">฿1.28M</div><div class="b-hero-meta"><span class="trend-up">+18.4% vs. previous</span><span>·</span><span>486 orders</span></div><div class="b-hero-chart">${chartSvg}</div><div class="b-hero-note">Daily Sales · synthetic preview</div></div><div class="b-side-stack"><section class="panel b-side-card"><h3>Channel mix</h3><div class="b-channel-bars"><div><div class="bar-label"><span><span class="channel-mark shopee">S</span> Shopee</span><strong>58%</strong></div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div></div><div><div class="bar-label"><span><span class="channel-mark tiktok">T</span> TikTok Shop</span><strong>42%</strong></div><div class="bar-track"><div class="bar-fill dark" style="width:42%"></div></div></div></div></section><section class="panel b-side-card"><h3>Data integrity</h3><div class="big num">3 / 5</div><p>source families available for this view</p><div class="empty-inline">${icon('database')} Comparison unavailable</div></section></div></section><div class="b-lower"><section class="panel b-table"><div class="panel-head"><div><p class="section-label">Performance evidence</p><h2>Top products</h2><p>จัดอันดับจากข้อมูลตัวอย่างในช่วงที่เลือก</p></div><button class="text-button" type="button" onclick="openDrawer()">View all →</button></div><table class="table"><thead><tr><th>PRODUCT</th><th>PLATFORM</th><th>ORDERS</th><th>GMV</th></tr></thead><tbody><tr><td><div class="product"><span class="product-thumb">01</span> HAKU Daily Lens</div></td><td>Shopee</td><td class="num">124</td><td class="num">฿284K</td></tr><tr><td><div class="product"><span class="product-thumb">02</span> HOYA Clear Care</div></td><td>TikTok Shop</td><td class="num">98</td><td class="num">฿211K</td></tr><tr><td><div class="product"><span class="product-thumb">03</span> Excare Soft</div></td><td>Shopee</td><td class="num">76</td><td class="num">฿168K</td></tr></tbody></table></section><section class="panel b-review"><div class="review-hero"><div><p class="section-label">Cause → Review</p><h2>What needs attention?</h2></div><div class="queue-count num">03</div></div><div class="review-item"><h3>ยอดขาย Shopee ต่ำกว่าช่วงก่อนหน้า</h3><p>Comparison ยังไม่มี coverage ที่ยืนยันได้</p><button class="text-button" type="button" onclick="openDrawer()">Open evidence →</button></div><div class="review-item"><h3>Product source เป็น period-only</h3><p>ไม่ควรตีความเป็น daily / weekly trend</p><button class="text-button" type="button" onclick="openDrawer()">View source →</button></div><button class="primary-button" type="button" onclick="openDrawer()" style="margin-top:10px">เปิด Review Queue ${icon('arrow-right')}</button></section></div></div>`;
+    }
+
+    function variantC() {
+      return `<div class="c-shell"><aside class="c-rail" aria-label="Compact navigation"><div class="brand-badge">${icon('chart')}</div><button class="active" type="button" aria-label="Overview">${icon('grid')}</button><button type="button" aria-label="Performance">${icon('chart')}</button><button type="button" aria-label="Review Queue">${icon('list')}</button><button type="button" aria-label="Data">${icon('database')}</button><div class="rail-bottom"><button type="button" aria-label="Account">P</button></div></aside><section class="c-main"><header class="c-top"><div><h1>Performance workspace</h1><p>ดู evidence ที่อยู่หลังตัวเลข · scope คงเดิมระหว่างหน้า</p></div><div class="c-top-actions">${state}<button class="primary-button" type="button" onclick="openDrawer()">${icon('eye')} Review</button></div></header><div class="c-context"><button class="c-select" type="button"><span>Period</span><em>1–31 ส.ค. 2026</em>${icon('chevron')}</button><button class="c-select" type="button"><span>Platform</span><em>ทุกแพลตฟอร์ม</em>${icon('chevron')}</button><button class="c-select" type="button"><span>Category</span><em>ไม่มีข้อมูล</em>${icon('chevron')}</button><div class="c-status">Historical Snapshot<br>Data Through: —</div></div><div class="c-kpis"><section class="panel c-kpi"><div class="c-kpi-top"><span>GMV</span><span class="mini-icon">${icon('chart')}</span></div><div class="kpi-value num">฿1.28M</div><div class="kpi-meta"><span class="trend-up">+18.4%</span> synthetic</div></section><section class="panel c-kpi"><div class="c-kpi-top"><span>Orders</span><span class="mini-icon">486</span></div><div class="kpi-value num">486</div><div class="kpi-meta"><span class="trend-up">+12.1%</span></div></section><section class="panel c-kpi"><div class="c-kpi-top"><span>Units</span><span class="mini-icon">742</span></div><div class="kpi-value num">742</div><div class="kpi-meta"><span class="trend-up">+9.7%</span></div></section><section class="panel c-kpi"><div class="c-kpi-top"><span>AOV</span><span class="mini-icon">฿</span></div><div class="kpi-value num">฿2,634</div><div class="kpi-meta"><span class="trend-none">—</span> no comparison</div></section></div><div class="c-workspace"><section class="panel c-table-panel"><div class="panel-head"><div><p class="section-label">Operations view</p><h2>Product performance</h2><p>period-scoped source · สแกนรายการแล้วเปิด evidence ต่อ</p></div><button class="ghost-button" type="button">${icon('download')} CSV</button></div><div class="c-table-tools"><div class="segmented" role="tablist"><button class="active" type="button">All <span class="num">(12)</span></button><button type="button">Shopee</button><button type="button">TikTok</button></div><label class="search">${icon('search')}<span class="sr-only">ค้นหาสินค้า</span><input placeholder="ค้นหา SKU / ชื่อสินค้า"></label></div><table class="table"><thead><tr><th>#</th><th>PRODUCT NAME</th><th>PLATFORM</th><th>ORDERS</th><th>GMV</th></tr></thead><tbody><tr><td class="num">01</td><td><div class="product"><span class="product-thumb">HK</span> HAKU Daily Lens</div></td><td><span class="channel-mark shopee">S</span></td><td class="num">124</td><td class="num">฿284K</td></tr><tr><td class="num">02</td><td><div class="product"><span class="product-thumb">HY</span> HOYA Clear Care</div></td><td><span class="channel-mark tiktok">T</span></td><td class="num">98</td><td class="num">฿211K</td></tr><tr><td class="num">03</td><td><div class="product"><span class="product-thumb">EX</span> Excare Soft</div></td><td><span class="channel-mark shopee">S</span></td><td class="num">76</td><td class="num">฿168K</td></tr></tbody></table><div class="empty-inline">${icon('database')} ตัวอย่างนี้แสดง Product_Period เป็นข้อมูลระดับช่วงเวลา ไม่ใช่รายวัน</div></section><aside class="panel c-evidence"><div class="panel-head"><div><p class="section-label">Source context</p><h2>Data health</h2><p>อ่านสถานะก่อนเชื่อมโยง insight</p></div></div><div class="evidence-block"><h3>Daily_Sales</h3><p><span class="state live">available</span></p><div class="coverage-line"><span>Coverage</span><strong>1–31 Aug 2026</strong></div></div><div class="evidence-block"><h3>Product_Period</h3><p><span class="state warn">period-only</span></p><div class="coverage-line"><span>Scope</span><strong>Aug 2026</strong></div></div><div class="evidence-block"><h3>Comparison period</h3><p><span class="state bad">unavailable</span></p><div class="coverage-line"><span>Reason</span><strong>no verified rows</strong></div></div><button class="primary-button" type="button" onclick="openDrawer()" style="width:100%; justify-content:center; margin-top:12px">เปิด Source Evidence ${icon('arrow-right')}</button></aside></div><div class="c-bottom"><section class="panel"><p class="section-label">Review next</p><h2 style="margin:0;font-size:16px">สัญญาณที่ต้องตรวจต่อ</h2><ul class="simple-list" style="list-style:none;padding:0"><li><strong>Shopee GMV</strong><span class="trend-down">ต้อง Review</span></li><li><strong>Product coverage</strong><span class="trend-none">มีข้อจำกัด</span></li></ul></section><section class="panel"><p class="section-label">System note</p><h2 style="margin:0;font-size:16px">อ่านง่ายขึ้นเพราะอะไร</h2><ul class="simple-list" style="list-style:none;padding:0"><li><strong>Scope</strong><span>อยู่บรรทัดเดียว</span></li><li><strong>Status</strong><span>รวมไว้จุดเดียว</span></li></ul></section></div></section></div>`;
+    }
+
+    function currentVariant() { const v = new URLSearchParams(location.search).get('variant'); return variants[v] ? v : 'A'; }
+    function render() {
+      const v = currentVariant();
+      document.getElementById('prototypeRoot').innerHTML = v === 'A' ? variantA() : v === 'B' ? variantB() : variantC();
+      document.title = `PPG Dashboard Prototype · ${variants[v].label}`;
+      const existing = document.querySelector('.switcher');
+      if (existing) existing.remove();
+      const nav = document.createElement('div');
+      nav.className = 'switcher';
+      nav.setAttribute('aria-label', 'เลือกแบบ prototype');
+      nav.innerHTML = `<button type="button" aria-label="แบบก่อนหน้า" onclick="cycle(-1)">${icon('arrow-left')}</button><div class="variant-name">${v} · ${variants[v].label}<small>${variants[v].sub} · ← / → เปลี่ยนแบบ</small></div><button type="button" aria-label="แบบถัดไป" onclick="cycle(1)">${icon('arrow-right')}</button>`;
+      document.body.appendChild(nav);
+    }
+    function cycle(delta) { const keys = Object.keys(variants); const next = keys[(keys.indexOf(currentVariant()) + delta + keys.length) % keys.length]; history.replaceState({}, '', `${location.pathname}?variant=${next}`); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function openDrawer() { document.getElementById('drawerBackdrop').classList.add('open'); document.querySelector('.drawer .close').focus(); }
+    function closeDrawer() { document.getElementById('drawerBackdrop').classList.remove('open'); }
+    document.getElementById('drawerBackdrop').addEventListener('click', event => { if (event.target.id === 'drawerBackdrop') closeDrawer(); });
+    document.addEventListener('keydown', event => { const tag = document.activeElement?.tagName; if (event.key === 'Escape') closeDrawer(); if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) cycle(event.key === 'ArrowLeft' ? -1 : 1); });
+    render();
+  </script>
+</body>
+</html>

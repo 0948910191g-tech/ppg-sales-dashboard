@@ -1,0 +1,158 @@
+{
+  "Users": [
+    {
+      "User_ID": "user-allowlisted",
+      "Email": "allowed@example.test",
+      "Workspace_ID": "workspace-ppg",
+      "Role": "EXECUTIVE",
+      "Is_Active": true
+    },
+    {
+      "User_ID": "user-inactive",
+      "Email": "inactive@example.test",
+      "Workspace_ID": "workspace-ppg",
+      "Role": "EXECUTIVE",
+      "Is_Active": false
+    }
+  ],
+  "Daily_Sales": [
+    {
+      "record_key": "daily-shopee-2026-07-31",
+      "batch_id": "view-batch-july",
+      "platform": "SHOPEE",
+      "sales_date": "2026-07-31",
+      "period_start": "2026-07-01",
+      "period_end": "2026-07-31",
+      "metric_scope": "DAILY",
+      "gross_gmv": 120,
+      "confirmed_gmv": 100,
+      "orders": 10,
+      "units": 12,
+      "visitors": 500,
+      "refund_gmv": 2,
+      "cancelled_gmv": 1,
+      "source_file": "fixture-july.csv"
+    },
+    {
+      "record_key": "daily-tiktok-2026-07-31",
+      "batch_id": "view-batch-july",
+      "platform": "TIKTOK",
+      "sales_date": "2026-07-31",
+      "period_start": "2026-07-01",
+      "period_end": "2026-07-31",
+      "metric_scope": "DAILY",
+      "gross_gmv": 240,
+      "confirmed_gmv": 200,
+      "orders": 20,
+      "units": 23,
+      "visitors": 750,
+      "refund_gmv": 4,
+      "cancelled_gmv": 2,
+      "source_file": "fixture-july.csv"
+    },
+    {
+      "record_key": "daily-shopee-2026-08-01",
+      "batch_id": "view-batch-august",
+      "platform": "SHOPEE",
+      "sales_date": "2026-08-01",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "metric_scope": "DAILY",
+      "gross_gmv": 180,
+      "confirmed_gmv": 150,
+      "orders": 15,
+      "units": 17,
+      "visitors": 600,
+      "refund_gmv": 3,
+      "cancelled_gmv": 1,
+      "source_file": "fixture-august.csv"
+    },
+    {
+      "record_key": "daily-tiktok-2026-08-01",
+      "batch_id": "view-batch-august",
+      "platform": "TIKTOK",
+      "sales_date": "2026-08-01",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "metric_scope": "DAILY",
+      "gross_gmv": 75,
+      "confirmed_gmv": null,
+      "orders": 3,
+      "units": 4,
+      "visitors": 230,
+      "refund_gmv": null,
+      "cancelled_gmv": 0,
+      "source_file": "fixture-august.csv"
+    }
+  ],
+  "Product_Period": [
+    {
+      "record_key": "product-shopee-august",
+      "batch_id": "view-batch-august",
+      "platform": "SHOPEE",
+      "sku": "SKU-001",
+      "product_name": "Fixture Wipes",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "sales_gmv": 150,
+      "ordered_gmv": 150,
+      "orders": 15,
+      "units": 17,
+      "buyers": 14,
+      "views": 600,
+      "clicks": 45,
+      "ctr": 0.075,
+      "conversion_rate": 0.033,
+      "aov": 10,
+      "source_file": "fixture-products.csv"
+    }
+  ],
+  "Ads_Period": [
+    {
+      "record_key": "ads-shopee-august",
+      "batch_id": "view-batch-august",
+      "platform": "SHOPEE",
+      "campaign_name": "Fixture Campaign",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "spend": 30,
+      "attributed_sales": 75,
+      "roas": 2.5,
+      "impressions": 1000,
+      "clicks": 45,
+      "orders": 8,
+      "source_file": "fixture-ads.csv"
+    }
+  ],
+  "Traffic_Period": [
+    {
+      "record_key": "traffic-shopee-august",
+      "batch_id": "view-batch-august",
+      "platform": "SHOPEE",
+      "traffic_source": "Fixture Search",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "sales_gmv": 150,
+      "visitors": 600,
+      "clicks": 45,
+      "views": 1000,
+      "source_file": "fixture-traffic.csv"
+    }
+  ],
+  "Creator_Period": [
+    {
+      "record_key": "creator-tiktok-august",
+      "batch_id": "view-batch-august",
+      "platform": "TIKTOK",
+      "creator_name": "Fixture Creator",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "gmv": 75,
+      "orders": 3,
+      "units": 4,
+      "refunds": null,
+      "commission": 5,
+      "source_file": "fixture-creators.csv"
+    }
+  ]
+}

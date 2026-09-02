@@ -1,0 +1,16 @@
+.DS_Store
+.scratch/
+.superpowers/
+
+# Local editor and runtime state
+.codex/
+.impeccable/
+
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials*.json
+secrets*.json
