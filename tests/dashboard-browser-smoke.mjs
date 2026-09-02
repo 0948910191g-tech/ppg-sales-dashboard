@@ -63,6 +63,7 @@ const routes = [
 
 async function assertRoute(route, headingText) {
   const nav = page.locator(`button[data-route="${route}"]`).first();
+  const completionHost = page.locator('.ui-completion-view');
   await nav.waitFor({ state: 'visible' });
   await nav.click();
   await page.waitForFunction((expected) => location.hash === `#${expected}`, route);
@@ -74,21 +75,22 @@ async function assertRoute(route, headingText) {
   if (route === 'overview') {
     assert.equal(await page.locator('#overview-view').isVisible(), true, 'overview should be visible');
     assert.equal(await page.locator('#sales-performance-view').isVisible(), false, 'sales should be hidden on overview');
-    assert.equal(await page.locator('#ui-completion-view').isVisible(), false, 'completion host should be hidden on overview');
+    assert.equal(await completionHost.isVisible(), false, 'completion host should be hidden on overview');
     return;
   }
 
   if (route === 'sales-performance') {
     assert.equal(await page.locator('#overview-view').isVisible(), false, 'overview should be hidden on sales');
     assert.equal(await page.locator('#sales-performance-view').isVisible(), true, 'sales should be visible');
-    assert.equal(await page.locator('#ui-completion-view').isVisible(), false, 'completion host should be hidden on sales');
+    assert.equal(await completionHost.isVisible(), false, 'completion host should be hidden on sales');
     return;
   }
 
   assert.equal(await page.locator('#overview-view').isVisible(), false, `${route}: overview should be hidden`);
   assert.equal(await page.locator('#sales-performance-view').isVisible(), false, `${route}: sales should be hidden`);
-  assert.equal(await page.locator('#ui-completion-view').isVisible(), true, `${route}: completion host should be visible`);
-  assert.equal(await page.locator('#ui-completion-view').getAttribute('data-route'), route, `${route}: completion host should own the route`);
+  assert.equal(await completionHost.isVisible(), true, `${route}: completion host should be visible; runtime errors: ${runtimeErrors.join(' | ')}`);
+  assert.equal(await completionHost.getAttribute('data-route'), route, `${route}: completion host should own the route`);
+  assert.equal(await completionHost.getAttribute('data-route-view'), route, `${route}: semantic route view should match`);
 }
 
 try {
@@ -117,6 +119,10 @@ try {
   assert.equal(await page.locator('[data-explorer-panel="chart"]').isVisible(), true, 'Data Explorer chart tab should render');
   await page.locator('[data-explorer-tab="metadata"]').click();
   assert.equal(await page.locator('[data-explorer-panel="metadata"]').isVisible(), true, 'Data Explorer metadata tab should render');
+
+  await assertRoute('overview', 'Overview');
+  await assertRoute('sales-performance', 'Sales Performance');
+  await assertRoute('marketing-ads', 'Marketing & Ads');
 
   assert.deepEqual(runtimeErrors, [], `Dashboard should have no runtime errors:\n${runtimeErrors.join('\n')}`);
   console.log('browser-smoke: all primary routes and core interactions passed');
