@@ -99,21 +99,32 @@ async function snapshotState(route) {
   ]);
 }
 
-async function assertRoute(route, headingText) {
+async function assertRenderedRoute(route, headingText, { requireNav = true } = {}) {
   console.log(`route:start ${route}`);
-  const nav = page.locator(`button[data-route="${route}"]`).first();
   const completionHost = page.locator('.ui-completion-view');
-  await nav.waitFor({ state: 'visible' });
-  await nav.click();
-  await page.waitForFunction((expected) => location.hash === `#${expected}`, route);
-  await page.waitForTimeout(100);
 
-  const state = await snapshotState(route);
-  console.log(`route:state ${route} ${JSON.stringify(state)}`);
-  assert.equal(state.diagnosticTimeout, undefined, `${route}: browser renderer stopped responding during route transition`);
-  assert.equal(state.titleHeadingCount, 1, `${route}: shared top heading must remain mounted; state=${JSON.stringify(state)} errors=${runtimeErrors.join(' | ')}`);
-  assert.equal(state.titleHeading?.includes(headingText), true, `${route}: top heading should contain ${headingText}; got ${state.titleHeading}`);
-  assert.equal(await nav.getAttribute('aria-current'), 'page', `${route}: nav should be active`);
+  if (requireNav) {
+    const nav = page.locator(`button[data-route="${route}"]`).first();
+    await nav.waitFor({ state: 'visible' });
+    await nav.click();
+    await page.waitForFunction((expected) => location.hash === `#${expected}`, route);
+    await page.waitForTimeout(100);
+
+    const state = await snapshotState(route);
+    console.log(`route:state ${route} ${JSON.stringify(state)}`);
+    assert.equal(state.diagnosticTimeout, undefined, `${route}: browser renderer stopped responding during route transition`);
+    assert.equal(state.titleHeadingCount, 1, `${route}: shared top heading must remain mounted; state=${JSON.stringify(state)} errors=${runtimeErrors.join(' | ')}`);
+    assert.equal(state.titleHeading?.includes(headingText), true, `${route}: top heading should contain ${headingText}; got ${state.titleHeading}`);
+    assert.equal(await nav.getAttribute('aria-current'), 'page', `${route}: nav should be active`);
+  } else {
+    await page.waitForFunction((expected) => location.hash === `#${expected}`, route);
+    await page.waitForTimeout(100);
+    const state = await snapshotState(route);
+    console.log(`route:state ${route} ${JSON.stringify(state)}`);
+    assert.equal(state.diagnosticTimeout, undefined, `${route}: browser renderer stopped responding during route transition`);
+    assert.equal(state.titleHeadingCount, 1, `${route}: shared top heading must remain mounted; state=${JSON.stringify(state)} errors=${runtimeErrors.join(' | ')}`);
+    assert.equal(state.titleHeading?.includes(headingText), true, `${route}: top heading should contain ${headingText}; got ${state.titleHeading}`);
+  }
 
   if (route === 'overview') {
     assert.equal(await page.locator('#overview-view').isVisible(), true, 'overview should be visible');
@@ -131,10 +142,12 @@ async function assertRoute(route, headingText) {
 
   assert.equal(await page.locator('#overview-view').isVisible(), false, `${route}: overview should be hidden`);
   assert.equal(await page.locator('#sales-performance-view').isVisible(), false, `${route}: sales should be hidden`);
-  assert.equal(await completionHost.isVisible(), true, `${route}: completion host should be visible; state=${JSON.stringify(state)} runtime errors=${runtimeErrors.join(' | ')}`);
+  assert.equal(await completionHost.isVisible(), true, `${route}: completion host should be visible; runtime errors=${runtimeErrors.join(' | ')}`);
   assert.equal(await completionHost.getAttribute('data-route'), route, `${route}: completion host should own the route`);
   assert.equal(await completionHost.getAttribute('data-route-view'), route, `${route}: semantic route view should match`);
 }
+
+const assertRoute = (route, headingText) => assertRenderedRoute(route, headingText, { requireNav: true });
 
 let failed = false;
 try {
@@ -147,25 +160,39 @@ try {
 
   console.log('interaction:start marketing-ads');
   await assertRoute('marketing-ads', 'Marketing & Ads');
-  await page.locator('[data-page-filter="channel"]').selectOption('meta');
-  assert.equal(await page.locator('[data-page-filter="channel"]').inputValue(), 'meta', 'Marketing channel filter should remain operable');
-  await page.locator('[data-chart-tab="weekly"]').click();
-  assert.equal(await page.locator('[data-chart-tab="weekly"]').getAttribute('aria-selected'), 'true', 'Marketing weekly chart tab should become selected');
+  await page.locator('[data-route-view="marketing-ads"] [data-page-filter="channel"]').selectOption('meta');
+  assert.equal(await page.locator('[data-route-view="marketing-ads"] [data-page-filter="channel"]').inputValue(), 'meta', 'Marketing channel filter should remain operable');
+  await page.locator('[data-route-view="marketing-ads"] [data-chart-tab="weekly"]').click();
+  assert.equal(await page.locator('[data-route-view="marketing-ads"] [data-chart-tab="weekly"]').getAttribute('aria-selected'), 'true', 'Marketing weekly chart tab should become selected');
 
   console.log('interaction:start review');
   await assertRoute('review', 'Review');
-  const reviewButton = page.locator('[data-open-signal]').first();
+  const visibleReview = page.locator('[data-route-view="review"]');
+  const reviewButton = visibleReview.locator('[data-open-signal]').first();
+  await reviewButton.waitFor({ state: 'visible' });
   await reviewButton.click();
   assert.equal(await page.locator('#ui-context-drawer-backdrop').isVisible(), true, 'Review should open context drawer');
   await page.locator('[data-drawer-close]').click();
   assert.equal(await page.locator('#ui-context-drawer-backdrop').isVisible(), false, 'Review drawer should close');
 
+  console.log('interaction:start review-walkthrough');
+  const walkthroughButton = visibleReview.locator('[data-open-walkthrough]').first();
+  await walkthroughButton.waitFor({ state: 'visible' });
+  await walkthroughButton.click();
+  await assertRenderedRoute('review-walkthrough', 'Review Walkthrough', { requireNav: false });
+  const walkthroughHost = page.locator('[data-route-view="review-walkthrough"]');
+  assert.equal(await walkthroughHost.locator('[data-walkthrough-step="0"]').getAttribute('aria-selected'), 'true', 'Walkthrough should start at step 1');
+  await walkthroughHost.locator('[data-walkthrough-next]').click();
+  assert.equal(await page.locator('[data-route-view="review-walkthrough"] [data-walkthrough-step="1"]').getAttribute('aria-selected'), 'true', 'Walkthrough next should advance to step 2');
+  await page.locator('[data-route-view="review-walkthrough"] [data-walkthrough-prev]').click();
+  assert.equal(await page.locator('[data-route-view="review-walkthrough"] [data-walkthrough-step="0"]').getAttribute('aria-selected'), 'true', 'Walkthrough previous should return to step 1');
+
   console.log('interaction:start data-explorer');
   await assertRoute('data-explorer', 'Data Explorer');
-  await page.locator('[data-explorer-tab="chart"]').click();
-  assert.equal(await page.locator('[data-explorer-panel="chart"]').isVisible(), true, 'Data Explorer chart tab should render');
-  await page.locator('[data-explorer-tab="metadata"]').click();
-  assert.equal(await page.locator('[data-explorer-panel="metadata"]').isVisible(), true, 'Data Explorer metadata tab should render');
+  await page.locator('[data-route-view="data-explorer"] [data-explorer-tab="chart"]').click();
+  assert.equal(await page.locator('[data-route-view="data-explorer"] [data-explorer-panel="chart"]').isVisible(), true, 'Data Explorer chart tab should render');
+  await page.locator('[data-route-view="data-explorer"] [data-explorer-tab="metadata"]').click();
+  assert.equal(await page.locator('[data-route-view="data-explorer"] [data-explorer-panel="metadata"]').isVisible(), true, 'Data Explorer metadata tab should render');
 
   console.log('sequence:start return-path');
   await assertRoute('overview', 'Overview');
@@ -173,7 +200,7 @@ try {
   await assertRoute('marketing-ads', 'Marketing & Ads');
 
   assert.deepEqual(runtimeErrors, [], `Dashboard should have no runtime errors:\n${runtimeErrors.join('\n')}`);
-  console.log('browser-smoke: all primary routes and core interactions passed');
+  console.log('browser-smoke: all primary routes, Review Walkthrough, and core interactions passed');
 } catch (error) {
   failed = true;
   const state = await snapshotState('failure').catch(() => ({ diagnostic: 'snapshot failed' }));
