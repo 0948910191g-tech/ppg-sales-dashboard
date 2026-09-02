@@ -620,8 +620,14 @@
         if (!host || !ROUTE_REGISTRY[route]) return;
         const heading = document.querySelector('.title-row h1');
         if (heading && ROUTE_HEADINGS[route]) {
-          const nextHeading = `${ROUTE_HEADINGS[route][0]} <span>/ ${ROUTE_HEADINGS[route][1]}</span>`;
-          if (heading.innerHTML !== nextHeading) heading.innerHTML = nextHeading;
+          const [englishHeading, thaiHeading] = ROUTE_HEADINGS[route];
+          const nextHeadingText = `${englishHeading} / ${thaiHeading}`;
+          if (heading.textContent.trim() !== nextHeadingText) {
+            heading.textContent = `${englishHeading} `;
+            const secondaryHeading = document.createElement('span');
+            secondaryHeading.textContent = `/ ${thaiHeading}`;
+            heading.append(secondaryHeading);
+          }
         }
         setRouteViewSemantics(route, host);
         annotateRegions(route, host);
