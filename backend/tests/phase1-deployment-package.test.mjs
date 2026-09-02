@@ -12,6 +12,7 @@ const EXPECTED_SOURCE_FILES = ['Config.gs', 'ApiCore.gs', 'Auth.gs', 'Phase1Repo
 const EXPECTED_PACKAGE_FILES = ['appsscript.json', 'dashboard.html', ...EXPECTED_SOURCE_FILES];
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BUILDER_PATH = path.join(PROJECT_ROOT, 'backend', 'scripts', 'build-phase1-appsscript.mjs');
+const LATEST_FRONTEND = path.join(PROJECT_ROOT, 'dashboard-reference-prototype.html');
 
 function fakeSheet(headers, rows) {
   return {
@@ -42,7 +43,7 @@ test('Phase 1 package is deterministic, co-located, least-privilege, and read-on
     assert.equal(fs.existsSync(path.join(outputDirectory, 'dashboard.html')), true);
     assert.equal(
       fs.readFileSync(path.join(outputDirectory, 'dashboard.html'), 'utf8'),
-      fs.readFileSync(path.join(PROJECT_ROOT, 'dashboard.html'), 'utf8'),
+      fs.readFileSync(LATEST_FRONTEND, 'utf8'),
     );
 
     const manifest = JSON.parse(fs.readFileSync(path.join(outputDirectory, 'appsscript.json'), 'utf8'));

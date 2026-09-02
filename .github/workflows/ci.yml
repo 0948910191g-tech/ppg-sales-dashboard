@@ -1,0 +1,36 @@
+name: Phase 1 Verification
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run backend and dashboard tests
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test backend/tests/*.test.mjs tests/*.test.mjs 2>&1 | tee test-output.txt
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-test-output
+          path: test-output.txt
+          if-no-files-found: warn
