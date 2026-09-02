@@ -618,7 +618,7 @@
       function annotate() {
         const host = document.querySelector('.ui-completion-view');
         const route = host?.dataset.route;
-        if (!host || !ROUTE_REGISTRY[route]) return;
+        if (!host || !ROUTE_REGISTRY[route] || host.hidden || window.location.hash !== ROUTE_REGISTRY[route].hash) return;
         const heading = document.querySelector('.title-row h1');
         if (heading && ROUTE_HEADINGS[route]) {
           const [englishHeading, thaiHeading] = ROUTE_HEADINGS[route];
