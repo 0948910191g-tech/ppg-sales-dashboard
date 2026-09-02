@@ -22,4 +22,15 @@ jobs:
           node-version: '22'
 
       - name: Run backend and dashboard tests
-        run: node --test backend/tests/*.test.mjs tests/*.test.mjs
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test backend/tests/*.test.mjs tests/*.test.mjs 2>&1 | tee test-output.txt
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-test-output
+          path: test-output.txt
+          if-no-files-found: warn
