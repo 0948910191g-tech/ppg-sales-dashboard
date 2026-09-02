@@ -96,9 +96,9 @@ function readPackageInputs() {
   }
 
   const manifestPath = path.join(PROJECT_ROOT, 'backend', 'appsscript.json');
-  const dashboardPath = path.join(PROJECT_ROOT, 'dashboard.html');
+  const dashboardPath = path.join(PROJECT_ROOT, 'dashboard-reference-prototype.html');
   if (!fs.existsSync(manifestPath)) throw new Error('Missing Apps Script manifest: appsscript.json');
-  if (!fs.existsSync(dashboardPath)) throw new Error('Missing dashboard.html.');
+  if (!fs.existsSync(dashboardPath)) throw new Error('Missing latest dashboard UI: dashboard-reference-prototype.html.');
   inputs.set('appsscript.json', fs.readFileSync(manifestPath));
   inputs.set('dashboard.html', fs.readFileSync(dashboardPath));
   return inputs;
