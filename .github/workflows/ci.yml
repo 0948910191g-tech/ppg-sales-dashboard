@@ -1,0 +1,26 @@
+name: Phase 1 Verification
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: false
+
+      - name: Run backend and dashboard tests
+        run: node --test backend/tests/*.test.mjs tests/*.test.mjs
